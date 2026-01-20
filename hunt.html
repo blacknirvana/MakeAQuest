@@ -80,7 +80,7 @@
     </div>
 
     <button class="nes-btn is-primary" onclick="startScan()">
-      SCAN QR CODE
+      SCAN QR
     </button>
 
     <div id="reader"></div>
@@ -157,52 +157,62 @@
     loadHunt();
 
     // QR Scanner
-    let scanner;
-    
-    window.startScan = function () {
+     window.startScan = function () {
       const reader = document.getElementById("reader");
       reader.style.display = "block";
     
       scanner = new Html5Qrcode("reader");
+      
+      // Synchronous callback
+      const onScanSuccess = (scannedText) => {
+        // Stop scanner immediately
+        scanner.stop().then(() => {
+          reader.style.display = "none";
+          handleScan(scannedText); // handle async separately
+        }).catch(err => {
+          console.error("Failed to stop scanner:", err);
+        });
+      };
+    
       scanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
-        async (scannedText) => {
-          const stopId = scannedText.trim();
-    
-          const stopRef = doc(db, "hunts", huntId, "stops", stopId);
-          const stopSnap = await getDoc(stopRef);
-    
-          if (!stopSnap.exists()) {
-            alert("Invalid QR code!");
-            return;
-          }
-    
-          // Load current team data
-          const teamSnap = await getDoc(teamRef);
-          const teamData = teamSnap.data();
-          const progress = teamData.progress || {};
-    
-          if (progress[stopId]) {
-            alert("You already found this stop!");
-          } else {
-            // Mark stop as completed
-            await updateDoc(teamRef, {
-              [`progress.${stopId}`]: serverTimestamp()
-            });
-    
-            alert(`Stop unlocked: ${stopSnap.data().name}!`);
-    
-            // Reload next hint
-            loadHunt();
-          }
-    
-          // Stop scanner
-          scanner.stop();
-          reader.style.display = "none";
-        }
+        onScanSuccess
       );
     };
+    
+    // Separate async function for Firestore operations
+    async function handleScan(scannedText) {
+      const stopId = scannedText.trim();
+    
+      const stopRef = doc(db, "hunts", huntId, "stops", stopId);
+      const stopSnap = await getDoc(stopRef);
+    
+      if (!stopSnap.exists()) {
+        alert("Invalid QR code!");
+        return;
+      }
+    
+      // Load current team data
+      const teamSnap = await getDoc(teamRef);
+      const teamData = teamSnap.data();
+      const progress = teamData.progress || {};
+    
+      if (progress[stopId]) {
+        alert("You already found this stop!");
+      } else {
+        // Mark stop as completed
+        await updateDoc(teamRef, {
+          [`progress.${stopId}`]: serverTimestamp()
+        });
+    
+        alert(`Stop unlocked: ${stopSnap.data().name}!`);
+    
+        // Reload next hint
+        loadHunt();
+      }
+    }
+
 
   </script>
 
