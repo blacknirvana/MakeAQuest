@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>The Hunt – Team Setup</title>
+
+  <!-- NES.css -->
+  <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+  <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      background: #212529;
+      color: #fff;
+    }
+
+    .header {
+      background: #ff4757;
+      padding: 16px;
+      text-align: center;
+      border-bottom: 4px solid #000;
+    }
+
+    .content {
+      padding: 24px 16px;
+      min-height: calc(100vh - 80px);
+      background: #1e90ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .nes-input {
+      width: 100%;
+      max-width: 260px;
+      margin-bottom: 16px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: #ffdd59;
+      font-size: 10px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>THE HUNT</h1>
+  </div>
+
+  <div class="content">
+
+    <h2>ENTER TEAM CODE</h2>
+
+    <input
+      id="teamCode"
+      class="nes-input"
+      type="text"
+      maxlength="5"
+      placeholder="ABCDE"
+      style="text-transform: uppercase;"
+    >
+
+    <button class="nes-btn is-primary" onclick="checkCode()">
+      CONTINUE
+    </button>
+
+    <p id="error" class="error hidden"></p>
+
+    <!-- Team name creation -->
+    <div id="nameSection" class="hidden">
+      <h2 style="margin-top:24px;">TEAM NAME</h2>
+
+      <input
+        id="teamName"
+        class="nes-input"
+        type="text"
+        maxlength="20"
+        placeholder="PIXEL HEROES"
+      >
+
+      <button class="nes-btn is-success" onclick="saveTeamName()">
+        START HUNT
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 🔥 YOUR FIREBASE CONFIG HERE
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const HUNT_ID = "HUNT-2026-DEMO"; // later dynamic
+
+    window.checkCode = async function () {
+      const codeInput = document.getElementById("teamCode");
+      const error = document.getElementById("error");
+      const nameSection = document.getElementById("nameSection");
+
+      const teamCode = codeInput.value.trim().toUpperCase();
+
+      error.classList.add("hidden");
+      nameSection.classList.add("hidden");
+
+      if (teamCode.length !== 5) {
+        error.textContent = "INVALID CODE";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      const teamRef = doc(db, "hunts", HUNT_ID, "teams", teamCode);
+      const snap = await getDoc(teamRef);
+
+      if (!snap.exists()) {
+        error.textContent = "CODE NOT FOUND";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      localStorage.setItem("teamCode", teamCode);
+      localStorage.setItem("huntId", HUNT_ID);
+
+      const data = snap.data();
+
+      if (data.teamName) {
+        // Already set → go straight to hunt
+        window.location.href = "hunt.html";
+      } else {
+        // Needs name
+        nameSection.classList.remove("hidden");
+      }
+    };
+
+    window.saveTeamName = async function () {
+      const teamName = document.getElementById("teamName").value.trim();
+      const error = document.getElementById("error");
+
+      if (!teamName) {
+        error.textContent = "ENTER A NAME";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      const teamCode = localStorage.getItem("teamCode");
+      const teamRef = doc(db, "hunts", HUNT_ID, "teams", teamCode);
+
+      await updateDoc(teamRef, {
+        teamName: teamName,
+        startedAt: serverTimestamp()
+      });
+
+      window.location.href = "hunt.html";
+    };
+  </script>
+
+</body>
+</html>
