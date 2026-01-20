@@ -1,30 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QR Scanner</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>The Hunt</title>
+
+  <!-- NES.css + Font -->
+  <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+  <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      background-color: #212529;
+      color: #fff;
+    }
+
+    /* Top header */
+    .header {
+      background-color: #ff4757;
+      padding: 16px;
+      text-align: center;
+      border-bottom: 4px solid #000;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Main content */
+    .content {
+      background-color: #1e90ff;
+      padding: 24px 16px 32px;
+      min-height: calc(100vh - 90px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .content h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .content p {
+      font-size: 10px;
+      line-height: 1.6;
+      max-width: 320px;
+      margin-bottom: 24px;
+    }
+
+    /* Scanner area */
+    #reader {
+      margin-top: 20px;
+      width: 260px;
+      max-width: 90%;
+      display: none;
+    }
+
+    /* NES button spacing */
+    .scan-btn {
+      margin-top: 16px;
+    }
+
+    /* Small screens tweak */
+    @media (min-width: 600px) {
+      .content h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<button onclick="startScan()">Scan QR</button>
-<div id="reader" style="width:300px;"></div>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>THE HUNT</h1>
+  </div>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-let scanner;
+  <!-- MAIN CONTENT -->
+  <div class="content">
 
-function startScan() {
-  scanner = new Html5Qrcode("reader");
-  scanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (text) => {
-      alert("Scanned: " + text);
-      scanner.stop();
+    <h2>READY PLAYER ONE?</h2>
+
+    <p>
+      Scan the hidden QR codes around campus to unlock the next stop.
+      Work together. Be fast. No cheating!
+    </p>
+
+    <button class="nes-btn is-primary scan-btn" onclick="startScan()">
+      SCAN QR CODE
+    </button>
+
+    <div id="reader"></div>
+
+  </div>
+
+  <!-- QR SCANNER -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    let scanner;
+
+    function startScan() {
+      const reader = document.getElementById("reader");
+      reader.style.display = "block";
+
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (text) => {
+          alert("Scanned: " + text);
+          scanner.stop();
+          reader.style.display = "none";
+        }
+      );
     }
-  );
-}
-</script>
+  </script>
 
 </body>
 </html>
