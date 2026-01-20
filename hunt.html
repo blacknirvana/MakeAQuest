@@ -158,21 +158,52 @@
 
     // QR Scanner
     let scanner;
+    
     window.startScan = function () {
       const reader = document.getElementById("reader");
       reader.style.display = "block";
-
+    
       scanner = new Html5Qrcode("reader");
       scanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
-        (text) => {
-          alert("Scanned: " + text);
+        async (scannedText) => {
+          const stopId = scannedText.trim();
+    
+          const stopRef = doc(db, "hunts", huntId, "stops", stopId);
+          const stopSnap = await getDoc(stopRef);
+    
+          if (!stopSnap.exists()) {
+            alert("Invalid QR code!");
+            return;
+          }
+    
+          // Load current team data
+          const teamSnap = await getDoc(teamRef);
+          const teamData = teamSnap.data();
+          const progress = teamData.progress || {};
+    
+          if (progress[stopId]) {
+            alert("You already found this stop!");
+          } else {
+            // Mark stop as completed
+            await updateDoc(teamRef, {
+              [`progress.${stopId}`]: serverTimestamp()
+            });
+    
+            alert(`Stop unlocked: ${stopSnap.data().name}!`);
+    
+            // Reload next hint
+            loadHunt();
+          }
+    
+          // Stop scanner
           scanner.stop();
           reader.style.display = "none";
         }
       );
     };
+
   </script>
 
 </body>
