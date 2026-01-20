@@ -185,13 +185,16 @@
     
     // Separate async function for Firestore operations
     async function handleScan(scannedText) {
+      console.log("Scanned QR:", scannedText);
       const stopId = scannedText.trim();
     
       const stopRef = doc(db, "hunts", huntId, "stops", stopId);
       const stopSnap = await getDoc(stopRef);
     
+      console.log("stopSnap exists?", stopSnap.exists());
+    
       if (!stopSnap.exists()) {
-        alert("Invalid QR code!");
+        alert("Invalid QR code! (" + stopId + ")");
         return;
       }
     
