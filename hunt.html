@@ -156,8 +156,10 @@
 
     loadHunt();
 
-    // QR Scanner
-     window.startScan = function () {
+      // QR Scanner
+  let scanner;
+    
+    window.startScan = function () {
       const reader = document.getElementById("reader");
       reader.style.display = "block";
     
