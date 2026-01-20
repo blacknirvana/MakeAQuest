@@ -1,0 +1,15 @@
+<div id="reader"></div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+const qrCodeScanner = new Html5Qrcode("reader");
+
+qrCodeScanner.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  (decodedText) => {
+    console.log("QR Code:", decodedText);
+    qrCodeScanner.stop();
+  }
+);
+</script>
