@@ -60,6 +60,16 @@
       width: 260px;
       display: none;
     }
+
+    .timer-box {
+      margin: 12px 0;
+      padding: 12px;
+      background: #000;
+      border: 4px solid #fff;
+      width: 100%;
+      max-width: 200px;
+      font-size: 12px;
+    }
   </style>
 </head>
 
@@ -75,6 +85,10 @@
 
     <h2>NEXT LOCATION</h2>
 
+    <div class="timer-box nes-container is-rounded">
+      <p id="timerText">20:00</p>
+    </div>
+    
     <div class="hint-box">
       <p id="hintText">Loading hint...</p>
     </div>
@@ -132,6 +146,16 @@
 
       const team = teamSnap.data();
       document.getElementById("teamName").textContent = team.teamName;
+
+      const teamSnap = await getDoc(teamRef);
+      if (!teamSnap.exists()) return;
+      
+      const team = teamSnap.data();
+      
+      // Start countdown if startedAt exists
+      if (team.startedAt) {
+        startCountdown(team.startedAt);
+      }
 
       const completed = team.progress
         ? Object.keys(team.progress)
@@ -219,6 +243,35 @@
         // Reload next hint
         loadHunt();
       }
+    }
+    
+    
+    // Set total game duration in minutes
+    const GAME_DURATION_MINUTES = 20;
+    
+    function startCountdown(startedAt) {
+      const timerText = document.getElementById("timerText");
+    
+      function updateTimer() {
+        const now = new Date();
+        const startTime = startedAt.toDate(); // Firestore Timestamp → JS Date
+        const endTime = new Date(startTime.getTime() + GAME_DURATION_MINUTES * 60 * 1000);
+    
+        let remaining = Math.max(0, endTime - now); // milliseconds
+    
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+    
+        timerText.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          alert("Time's up!"); // Or show NES-style modal
+        }
+      }
+    
+      updateTimer(); // initial call
+      const timerInterval = setInterval(updateTimer, 1000);
     }
 
 
