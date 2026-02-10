@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Kids Hunt</title>
+
+<link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+<link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet">
+
+<style>
+  body {
+    margin: 0;
+    font-family: "Press Start 2P";
+    background: #212529;
+    color: #fff;
+  }
+
+  header {
+    background: #ffcc00;
+    color: #000;
+    text-align: center;
+    padding: 16px;
+  }
+
+  main {
+    display: flex;
+    height: calc(100vh - 80px);
+  }
+
+  .left, .right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-box {
+    text-align: center;
+  }
+
+  .icon {
+    font-size: 96px;
+    margin-bottom: 24px;
+  }
+
+  #reader {
+    width: 320px;
+    display: none;
+  }
+
+  .done {
+    font-size: 48px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h3>FIND THIS!</h3>
+</header>
+
+<main>
+  <!-- LEFT: ICON -->
+  <div class="left">
+    <div class="nes-container is-rounded icon-box">
+      <div id="icon" class="icon">🍌</div>
+      <p id="label">BANANA</p>
+    </div>
+  </div>
+
+  <!-- RIGHT: SCANNER -->
+  <div class="right">
+    <div>
+      <button class="nes-btn is-primary" onclick="startScan()">SCAN</button>
+      <div id="reader"></div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+/* =============================
+   OBJECT SET
+============================= */
+const objects = [
+  { id: "banana", label: "BANANA", icon: "🍌" },
+  { id: "apple", label: "APPLE", icon: "🍎" },
+  { id: "car", label: "CAR", icon: "🚗" },
+  { id: "spaceship", label: "SPACESHIP", icon: "🚀" },
+  { id: "dog", label: "DOG", icon: "🐶" },
+  { id: "cat", label: "CAT", icon: "🐱" },
+  { id: "ball", label: "BALL", icon: "⚽" },
+  { id: "star", label: "STAR", icon: "⭐" },
+  { id: "tree", label: "TREE", icon: "🌳" },
+  { id: "house", label: "HOUSE", icon: "🏠" }
+];
+
+// Shuffle order
+let remaining = objects.sort(() => Math.random() - 0.5);
+let current = remaining.shift();
+
+let scanner;
+
+/* =============================
+   UI UPDATE
+============================= */
+function showCurrent() {
+  if (!current) {
+    document.querySelector(".left").innerHTML =
+      `<div class="done">🎉 DONE! 🎉</div>`;
+    document.querySelector(".right").innerHTML =
+      `<div class="done">👏</div>`;
+    return;
+  }
+
+  document.getElementById("icon").textContent = current.icon;
+  document.getElementById("label").textContent = current.label;
+}
+
+/* =============================
+   SCANNER
+============================= */
+function startScan() {
+  const reader = document.getElementById("reader");
+  reader.style.display = "block";
+
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (text) => {
+      scanner.stop();
+      reader.style.display = "none";
+      handleScan(text.trim().toLowerCase());
+    }
+  );
+}
+
+function handleScan(value) {
+  if (value === current.id) {
+    current = remaining.shift();
+    showCurrent();
+  } else {
+    alert("❌ Try again!");
+  }
+}
+
+// Initial render
+showCurrent();
+</script>
+
+</body>
+</html>
