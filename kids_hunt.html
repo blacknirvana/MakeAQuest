@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Kids Hunt</title>
+<title>Kids QR Hunt</title>
 
 <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet">
@@ -15,18 +15,19 @@
     font-family: "Press Start 2P";
     background: #212529;
     color: #fff;
+    overflow: hidden;
   }
 
   header {
     background: #ffcc00;
     color: #000;
     text-align: center;
-    padding: 16px;
+    padding: 14px;
   }
 
   main {
     display: flex;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 72px);
   }
 
   .left, .right {
@@ -38,6 +39,7 @@
 
   .icon-box {
     text-align: center;
+    padding: 24px;
   }
 
   .icon {
@@ -52,6 +54,11 @@
 
   .done {
     font-size: 48px;
+    text-align: center;
+  }
+
+  .scan-btn {
+    margin-bottom: 12px;
   }
 </style>
 </head>
@@ -74,7 +81,7 @@
   <!-- RIGHT: SCANNER -->
   <div class="right">
     <div>
-      <button class="nes-btn is-primary" onclick="startScan()">SCAN</button>
+      <button class="nes-btn is-primary scan-btn" onclick="startScan()">SCAN</button>
       <div id="reader"></div>
     </div>
   </div>
@@ -83,9 +90,9 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-/* =============================
-   OBJECT SET
-============================= */
+/* =========================
+   OBJECTS KIDS CAN FIND
+========================= */
 const objects = [
   { id: "banana", label: "BANANA", icon: "🍌" },
   { id: "apple", label: "APPLE", icon: "🍎" },
@@ -99,21 +106,25 @@ const objects = [
   { id: "house", label: "HOUSE", icon: "🏠" }
 ];
 
-// Shuffle order
+/* =========================
+   GAME STATE
+========================= */
 let remaining = objects.sort(() => Math.random() - 0.5);
 let current = remaining.shift();
 
 let scanner;
+let scanning = false;
+let lastScanTime = 0;
 
-/* =============================
+/* =========================
    UI UPDATE
-============================= */
+========================= */
 function showCurrent() {
   if (!current) {
     document.querySelector(".left").innerHTML =
       `<div class="done">🎉 DONE! 🎉</div>`;
     document.querySelector(".right").innerHTML =
-      `<div class="done">👏</div>`;
+      `<div class="done">👏 GREAT JOB!</div>`;
     return;
   }
 
@@ -121,36 +132,57 @@ function showCurrent() {
   document.getElementById("label").textContent = current.label;
 }
 
-/* =============================
-   SCANNER
-============================= */
+/* =========================
+   START SCANNER (ONCE)
+========================= */
 function startScan() {
+  if (scanning) return;
+
   const reader = document.getElementById("reader");
   reader.style.display = "block";
 
   scanner = new Html5Qrcode("reader");
+  scanning = true;
 
   scanner.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
-    (text) => {
-      scanner.stop();
-      reader.style.display = "none";
-      handleScan(text.trim().toLowerCase());
-    }
+    onScan
   );
 }
 
-function handleScan(value) {
-  if (value === current.id) {
+/* =========================
+   SCAN HANDLER (CONTINUOUS)
+========================= */
+function onScan(text) {
+  const now = Date.now();
+
+  // cooldown to prevent double scans
+  if (now - lastScanTime < 1200) return;
+  lastScanTime = now;
+
+  const value = text.trim().toLowerCase();
+
+  if (current && value === current.id) {
+    // green flash
+    document.body.style.background = "#28a745";
+    setTimeout(() => document.body.style.background = "#212529", 250);
+
     current = remaining.shift();
     showCurrent();
-  } else {
-    alert("❌ Try again!");
+
+    // finished
+    if (!current) {
+      scanner.stop();
+      scanning = false;
+      document.getElementById("reader").style.display = "none";
+    }
   }
 }
 
-// Initial render
+/* =========================
+   INIT
+========================= */
 showCurrent();
 </script>
 
